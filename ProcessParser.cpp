@@ -42,7 +42,7 @@ public:
     static string printCpuStats(vector<string> values1, vector<string>values2);
 };
 
-// getCmd returns Cmd info of current pid
+// getCmd returns Cmd info of current PID
 string ProcessParser::getCmd(string pid)
 {
     string line;
@@ -52,7 +52,7 @@ string ProcessParser::getCmd(string pid)
     return line;
 }
 
-// getPidList returns list of all pids 
+// getPidList returns list of all PIDs 
 vector<string> ProcessParser::getPidList()
 {
     vector<string> pidList; 
@@ -69,7 +69,7 @@ vector<string> ProcessParser::getPidList()
     return pidList;
 }
 
-// getVmSize returns VM size of current pid
+// getVmSize returns VM size of current PID
 string ProcessParser::getVmSize(string pid)
 {
     string name = "VmData";
@@ -92,4 +92,66 @@ string ProcessParser::getVmSize(string pid)
     }
 
     return to_string(size);
+}
+
+// getCpuPercent returns the CPU load value in percent for the current PID
+string ProcessParser::getCpuPercent(string pid)
+{
+    string line;
+    float result;
+   
+    ifstream stream = Util::getStream(Path::basePath() + pid + "/" + Path::statPath());
+    getline(stream, line);
+    string str = line;
+    
+    istringstream buf(str);
+    istream_iterator<string> beg(buf), end;
+    vector<string> values(beg, end);
+
+    float utime = stof(ProcessParser::getProcUpTime(pid));
+    float stime = stof(values[14]);
+    float cutime = stof(values[15]);
+    float cstime = stof(values[16]);
+    float starttime = stof(values[21]);
+    float uptime = ProcessParser::getSysUpTime();
+    
+    float freq = sysconf(_SC_CLK_TCK);
+    
+    float totalTime = utime + stime + cutime + cstime;
+    float seconds = uptime - (starttime / freq);
+    
+    result = 100.0 * ((totalTime / freq) / seconds);
+    
+    return to_string(result);
+}
+
+// getProcUpTime returns Process Up Time
+string ProcessParser::getProcUpTime(string pid)
+{
+    string line;
+
+    ifstream stream = Util::getStream(Path::basePath() + pid + "/" + Path::statPath());
+    getline(stream, line);
+    string str = line;
+    
+    istringstream buf(str);
+    istream_iterator<string> beg(buf), end;
+    vector<string> values(beg, end);
+
+    return to_string(float(stof(values[13]) / sysconf(_SC_CLK_TCK)));
+}
+
+// getSysUpTime returns System Up Time
+long int ProcessParser::getSysUpTime()
+{
+    string line;
+
+    ifstream stream = Util::getStream(Path::basePath() + Path::upTimePath());
+    getline(stream, line);
+    
+    istringstream buf(line);
+    istream_iterator<string> beg(buf), end;
+    vector<string> values(beg, end);
+
+    return stoi(values[0]);
 }
