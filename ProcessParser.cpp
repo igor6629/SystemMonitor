@@ -155,3 +155,45 @@ long int ProcessParser::getSysUpTime()
 
     return stoi(values[0]);
 }
+
+// getProcUser returns the name of the user who started this PID
+string ProcessParser::getProcUser(string pid)
+{
+    string name = "Uid";
+    string userId;
+    string line;
+
+    ifstream stream = Util::getStream(Path::basePath() + pid + Path::statusPath());
+
+    while (getline(stream, line))
+    {
+        if (line.compare(0, name.size(), name) == 0)
+        {
+            istringstream buf(line);
+            istream_iterator<string> beg(buf), end;
+            vector<string> values(beg, end);
+
+            userId = values[1];
+            break;
+        }
+    }
+
+    stream = Util::getStream("/etc/passwd");
+
+    while (getline(stream, line))
+    {
+        vector<string> result;
+        stringstream ss(line);
+        string token;
+        
+        while (getline(ss, token, ':')) 
+        {
+            result.push_back(token);
+        }
+
+        if (result[2] == userId)
+            return result[0];
+    }
+
+    return "";
+}
