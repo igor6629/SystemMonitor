@@ -33,16 +33,19 @@ public:
     static string getProcUpTime(string pid);
     static string getProcUser(string pid);
     static vector<string> getSysCpuPercent(string coreNumber = "");
+    static float getSysActiveCpuTime(vector<string> time);
+    static float getSysIdleCpuTime(vector<string> time);
     static float getSysRamPercent();
     static string getSysKernelVersion();
     static int getTotalThreads();
     static int getTotalNumberOfProcesses();
     static int getNumberOfRunningProcesses();
     static string getOsName();
-    static string printCpuStats(vector<string> values1, vector<string>values2);
+    static int getNumberOfCores();
+    static string printCpuStats(vector<string> previus, vector<string>current);
 };
 
-// getCmd returns Cmd info of current PID
+// getCmd returns the command that executed the PID
 string ProcessParser::getCmd(string pid)
 {
     string line;
@@ -196,4 +199,247 @@ string ProcessParser::getProcUser(string pid)
     }
 
     return "";
+}
+
+// getNumberOfCores returns the number of CPU cores on the host
+int ProcessParser::getNumberOfCores()
+{
+    string name = "cpu cores";
+    string line;
+
+    ifstream stream = Util::getStream(Path::basePath() + "cpuinfo");
+
+    while (getline(stream, line))
+    {
+        if (line.compare(0, name.size(), name) == 0)
+        {
+            istringstream buf(line);
+            istream_iterator<string> beg(buf), end;
+            vector<string> values(beg, end);
+
+            return stoi(values[3]);
+        }
+    }
+
+    return 0;
+}
+
+// getSysCpuPercent returns information on overall CPU usage, as well stats for individual cores
+vector<string> ProcessParser::getSysCpuPercent(string coreNumber = "")
+{
+    string name = "cpu" + coreNumber;
+    string line;
+
+    ifstream stream = Util::getStream(Path::basePath() + Path::statPath());
+
+    while (getline(stream, line))
+    {
+        if (line.compare(0, name.size(), name) == 0)
+        {
+            istringstream buf(line);
+            istream_iterator<string> beg(buf), end;
+            vector<string> values(beg, end);
+
+            return values;
+        }
+    }
+
+    return {};
+}
+
+// printCpuStats returns calculates CPU usage, either overall or for a selected core, has two parameters: previous and current time
+string ProcessParser::printCpuStats(vector<string> previus, vector<string>current)
+{
+    float activeTime = getSysActiveCpuTime(current) - getSysActiveCpuTime(previus);
+    float idleTime = getSysIdleCpuTime(current) - getSysIdleCpuTime(previus);
+    float totalTime = activeTime + idleTime;
+    float result = 100.0 * (activeTime / totalTime);
+    
+    return to_string(result);
+}
+
+// getSysActiveCpuTime returns system active CPU time
+float ProcessParser::getSysActiveCpuTime(vector<string> time)
+{
+    return stof(time[S_USER]) +
+          stof(time[S_NICE]) +
+          stof(time[S_SYSTEM]) +
+          stof(time[S_IRQ]) +
+          stof(time[S_SOFTIRQ]) +
+          stof(time[S_STEAL]) +
+          stof(time[S_GUEST]) +
+          stof(time[S_GUEST_NICE]);
+}
+
+// getSysIdleCpuTime returns system idle CPU time
+float ProcessParser::getSysIdleCpuTime(vector<string> time)
+{
+    return stof(time[S_IDLE]) + stof(time[S_IOWAIT]);
+}
+
+// getSysRamPercent returns the RAM utilization in percentages
+float ProcessParser::getSysRamPercent()
+{
+    string memAvailable = "MemAvailable:";
+    string memFree = "MemFree:";
+    string buffers = "Buffers:";
+    string line;
+
+    ifstream stream = Util::getStream(Path::basePath() + Path::memInfoPath());
+
+    bool memAvailableB = false;
+    bool memFreeB = false;
+    bool buffersB = false;
+
+    float memAvailableF = 0;
+    float memFreeF = 0;
+    float buffersF = 0;
+
+    while (getline(stream, line))
+    {
+        if (memAvailableB && memFreeB && buffersB)
+            break;
+
+        if (line.compare(0, memAvailable.size(), memAvailable) == 0)
+        {
+            istringstream buf(line);
+            istream_iterator<string> beg(buf), end;
+            vector<string> values(beg, end);
+
+            memAvailableF = stof(values[1]);
+            memAvailableB = true;
+        }
+
+        if (line.compare(0, memFree.size(), memFree) == 0)
+        {
+            istringstream buf(line);
+            istream_iterator<string> beg(buf), end;
+            vector<string> values(beg, end);
+
+            memFreeF = stof(values[1]);
+            memFreeB = true;
+        }
+
+        if (line.compare(0, buffers.size(), buffers) == 0)
+        {
+            istringstream buf(line);
+            istream_iterator<string> beg(buf), end;
+            vector<string> values(beg, end);
+
+            buffersF = stof(values[1]);
+            buffersB = true;
+        }
+    }
+
+    return float(100.0 * (1 - (memFreeF / (memAvailableF - buffersF))));
+}
+
+// getSysKernelVersion returns data about the kernel version
+string ProcessParser::getSysKernelVersion()
+{
+    string line;
+    ifstream stream = Util::getStream(Path::basePath() + Path::versionPath());
+
+    getline(stream, line);
+
+    istringstream buf(line);
+    istream_iterator<string> beg(buf), end;
+    vector<string> values(beg, end);
+
+    return values[2];
+}
+
+// getOsName returns the name of the operating system
+string ProcessParser::getOsName()
+{
+    string line;
+    string name = "PRETTY_NAME";
+
+    ifstream stream = Util::getStream("/etc/os-release");
+
+    while (getline(stream, line))
+    {
+        if (line.compare(0, name.size(), name) == 0)
+        {
+            string result = line.substr(13, line.size() - 13 - 1);
+            return result;
+        }
+    }
+
+    return "";
+}
+
+// getTotalThreads returns the total number of threads
+int ProcessParser::getTotalThreads()
+{
+    vector<string> pids = ProcessParser::getPidList();
+    string name = "Threads"; 
+    string line;
+    int threads = 0;
+
+    for (const auto& pid : pids)
+    {
+        ifstream stream = Util::getStream(Path::basePath() + pid + Path::statusPath());
+
+        while (getline(stream, line))
+        {
+            if (line.compare(0, name.size(), name) == 0)
+            {
+                istringstream buf(line);
+                istream_iterator<string> beg(buf), end;
+                vector<string> values(beg, end);
+
+                threads += stoi(values[1]);
+                break;
+            }
+        }
+    }
+
+    return threads;
+}
+
+// getTotalNumberOfProcesses returns total number of processes
+int ProcessParser::getTotalNumberOfProcesses()
+{
+    string name = "processes"; 
+    string line;
+
+    ifstream stream = Util::getStream(Path::basePath() + Path::statPath());
+
+    while (getline(stream, line))
+    {
+        if (line.compare(0, name.size(), name) == 0)
+        {
+            istringstream buf(line);
+            istream_iterator<string> beg(buf), end;
+            vector<string> values(beg, end);
+
+            return stoi(values[1]);
+        }
+    }
+
+    return 0;
+}
+
+// getNumberOfRunningProcesses returns number of running processes
+int ProcessParser::getNumberOfRunningProcesses()
+{
+    string name = "procs_running"; 
+    string line;
+
+    ifstream stream = Util::getStream(Path::basePath() + Path::statPath());
+
+    while (getline(stream, line))
+    {
+        if (line.compare(0, name.size(), name) == 0)
+        {
+            istringstream buf(line);
+            istream_iterator<string> beg(buf), end;
+            vector<string> values(beg, end);
+
+            return stoi(values[1]);
+        }
+    }
+
+    return 0;
 }
