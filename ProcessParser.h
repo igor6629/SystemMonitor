@@ -1,3 +1,6 @@
+#ifndef PROCESSPARSER_H
+#define PROCESSPARSER_H
+
 #include <algorithm>
 #include <iostream>
 #include <math.h>
@@ -17,8 +20,8 @@
 #include <time.h>
 #include <unistd.h>
 #include <filesystem>
-#include <constants.h>
-#include <util.h>
+#include "constants.h"
+#include "util.h"
 
 using namespace std;
 
@@ -32,7 +35,7 @@ public:
     static long int getSysUpTime();
     static string getProcUpTime(string pid);
     static string getProcUser(string pid);
-    static vector<string> getSysCpuPercent(string coreNumber = "");
+    static vector<string> getSysCpuPercent(string coreNumber);
     static float getSysActiveCpuTime(vector<string> time);
     static float getSysIdleCpuTime(vector<string> time);
     static float getSysRamPercent();
@@ -443,3 +446,5 @@ int ProcessParser::getNumberOfRunningProcesses()
 
     return 0;
 }
+
+#endif // PROCCESSPARSER_H

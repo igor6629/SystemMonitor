@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PATH_H
+#define PATH_H
 
 #include <string>
 
@@ -29,3 +30,5 @@ public:
     static string memInfoPath() { return "meminfo"; }
     static string versionPath() { return "version"; }
 };
+
+#endif // PATH_H

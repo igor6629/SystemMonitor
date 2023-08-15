@@ -1,9 +1,11 @@
+#ifndef UTIL_H
+#define UTIL_H
+
 #include <string>
 #include <fstream>
 
 using namespace std;
 
-// Classic helper functions
 class Util 
 {
 public:
@@ -24,9 +26,6 @@ string Util::convertToTime(long int input_seconds)
     return result;
 }
 
-// constructing string for given percentage
-// 50 bars is uniformly streched 0 - 100 %
-// meaning: every 2% is one bar(|)
 string Util::getProgressBar(string percent)
 {
     string result = "0% ";
@@ -46,7 +45,6 @@ string Util::getProgressBar(string percent)
     return result;
 }
 
-// wrapper for creating streams
 ifstream Util::getStream(string path)
 {
     ifstream stream(path);
@@ -56,3 +54,5 @@ ifstream Util::getStream(string path)
     
     return stream;
 }
+
+#endif // UTIL_H
