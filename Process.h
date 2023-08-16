@@ -80,17 +80,21 @@ string Process::getProcess()
     this->UpTime = ProcessParser::getProcUpTime(this->PID);
     this->CPU = ProcessParser::getCpuPercent(this->PID);
 
+    string currentCMD = this->CMD;
+
+    if (currentCMD.size() >= 25)
+        currentCMD = currentCMD.substr(0, 25) + "...";
+
     return (this->PID + "   "
-                    + this->User
-                    + "   "
+                    + this->User.substr(0,4)
+                    + "     "
                     + this->Memory.substr(0,5)
                     + "     "
                     + this->CPU.substr(0,5)
                     + "     "
                     + this->UpTime.substr(0,5)
                     + "    "
-                    + this->CMD.substr(0,30)
-                    + "...");
+                    + currentCMD);
 }
 
 #endif // PROCESS_H

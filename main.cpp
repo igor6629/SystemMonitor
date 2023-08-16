@@ -26,7 +26,7 @@ void writeSysInfoToConsole(SysInfo sys, WINDOW* sys_win)
     wattron(sys_win,COLOR_PAIR(1));
     wprintw(sys_win,getCString(Util::getProgressBar(sys.getCpuPercent())));
     wattroff(sys_win,COLOR_PAIR(1));
-    mvwprintw(sys_win,5,2,getCString(( "Other cores:")));
+    mvwprintw(sys_win,5,2,getCString(( "Other cores: ")));
     wattron(sys_win,COLOR_PAIR(1));
     vector<string> val = sys.getCoresStats();
     
@@ -38,8 +38,8 @@ void writeSysInfoToConsole(SysInfo sys, WINDOW* sys_win)
     wattron(sys_win,COLOR_PAIR(1));
     wprintw(sys_win,getCString(Util::getProgressBar(sys.getMemPercent())));
     wattroff(sys_win,COLOR_PAIR(1));
-    mvwprintw(sys_win,11,2,getCString(( "Total Processes:" + sys.getTotalProc())));
-    mvwprintw(sys_win,12,2,getCString(( "Running Processes:" + sys.getRunningProc())));
+    mvwprintw(sys_win,11,2,getCString(( "Total Processes: " + sys.getTotalProc())));
+    mvwprintw(sys_win,12,2,getCString(( "Running Processes: " + sys.getRunningProc())));
     mvwprintw(sys_win,13,2,getCString(( "Up Time: " + Util::convertToTime(sys.getUpTime()))));
 }
 
@@ -50,15 +50,15 @@ void getProcessListToConsole(ProcessContainer procs, WINDOW* win)
     
     mvwprintw(win,1,2,"PID:");
     mvwprintw(win,1,9,"User:");
-    mvwprintw(win,1,16,"CPU[%]:");
-    mvwprintw(win,1,26,"RAM[MB]:");
-    mvwprintw(win,1,35,"Uptime:");
-    mvwprintw(win,1,44,"CMD:");
+    mvwprintw(win,1,18,"CPU[%]:");
+    mvwprintw(win,1,28,"RAM[MB]:");
+    mvwprintw(win,1,37,"Uptime:");
+    mvwprintw(win,1,46,"CMD:");
     wattroff(win, COLOR_PAIR(2));
     
     vector<string> processes = procs.getList();
     
-    for(int i = 0; i < 20; ++i)
+    for(int i = 0; i < 10; ++i)
         mvwprintw(win, 2 + i, 2, getCString(processes[i]));
 }
 
