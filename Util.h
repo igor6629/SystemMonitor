@@ -3,6 +3,9 @@
 
 #include <string>
 #include <fstream>
+#include <iterator>
+#include <sstream>
+#include <vector>
 
 using namespace std;
 
@@ -11,6 +14,7 @@ class Util
 public:
     static string convertToTime (long int input_seconds);
     static string getProgressBar(string percent);
+    static vector<string> splitString(string str);
     static ifstream getStream(string path);
 };
 
@@ -43,6 +47,15 @@ string Util::getProgressBar(string percent)
     result += " " + percent.substr(0,5) + " /100%";
     
     return result;
+}
+
+vector<string> Util::splitString(string str)
+{
+    istringstream buf(str);
+    istream_iterator<string> beg(buf), end;
+    vector<string> values(beg, end);
+    
+    return values;
 }
 
 ifstream Util::getStream(string path)

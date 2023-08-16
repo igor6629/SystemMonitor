@@ -28,6 +28,7 @@ public:
     }
 
     void setPID(string PID);
+    
     string getPID() const;
     string getUser() const;
     string getCMD() const;

@@ -40,6 +40,8 @@ public:
 
   void setAttributes();
   void setLastCpuMeasures();
+  void setCpuCoresStats();
+
   long getUpTime() const;
   string getMemPercent() const;
   string getThreads() const;
@@ -49,7 +51,6 @@ public:
   string getOSName() const;
   string getCpuPercent() const;
   void getOtherCores(int size);
-  void setCpuCoresStats();
   vector<string> getCoresStats() const;
 };
 

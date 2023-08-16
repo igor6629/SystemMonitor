@@ -21,7 +21,7 @@
 #include <unistd.h>
 #include <filesystem>
 #include "constants.h"
-#include "util.h"
+#include "Util.h"
 
 using namespace std;
 
@@ -80,7 +80,7 @@ string ProcessParser::getVmSize(string pid)
 {
     string name = "VmData";
     string line;
-    float size;
+    float size = 0;
 
     ifstream stream = Util::getStream(Path::basePath() + pid + Path::statusPath());
 
@@ -88,9 +88,7 @@ string ProcessParser::getVmSize(string pid)
     {
         if (line.compare(0, name.size(), name) == 0)
         {
-            istringstream buf(line);
-            istream_iterator<string> beg(buf), end;
-            vector<string> values(beg, end);
+            vector<string> values = Util::splitString(line);
 
             size = (stof(values[1]) / float(1024));
             break;
@@ -108,11 +106,8 @@ string ProcessParser::getCpuPercent(string pid)
    
     ifstream stream = Util::getStream(Path::basePath() + pid + "/" + Path::statPath());
     getline(stream, line);
-    string str = line;
     
-    istringstream buf(str);
-    istream_iterator<string> beg(buf), end;
-    vector<string> values(beg, end);
+    vector<string> values = Util::splitString(line);
 
     float utime = stof(ProcessParser::getProcUpTime(pid));
     float stime = stof(values[14]);
@@ -138,11 +133,8 @@ string ProcessParser::getProcUpTime(string pid)
 
     ifstream stream = Util::getStream(Path::basePath() + pid + "/" + Path::statPath());
     getline(stream, line);
-    string str = line;
     
-    istringstream buf(str);
-    istream_iterator<string> beg(buf), end;
-    vector<string> values(beg, end);
+    vector<string> values = Util::splitString(line);
 
     return to_string(float(stof(values[13]) / sysconf(_SC_CLK_TCK)));
 }
@@ -155,9 +147,7 @@ long int ProcessParser::getSysUpTime()
     ifstream stream = Util::getStream(Path::basePath() + Path::upTimePath());
     getline(stream, line);
     
-    istringstream buf(line);
-    istream_iterator<string> beg(buf), end;
-    vector<string> values(beg, end);
+    vector<string> values = Util::splitString(line);
 
     return stoi(values[0]);
 }
@@ -175,9 +165,7 @@ string ProcessParser::getProcUser(string pid)
     {
         if (line.compare(0, name.size(), name) == 0)
         {
-            istringstream buf(line);
-            istream_iterator<string> beg(buf), end;
-            vector<string> values(beg, end);
+            vector<string> values = Util::splitString(line);
 
             userId = values[1];
             break;
@@ -216,9 +204,7 @@ int ProcessParser::getNumberOfCores()
     {
         if (line.compare(0, name.size(), name) == 0)
         {
-            istringstream buf(line);
-            istream_iterator<string> beg(buf), end;
-            vector<string> values(beg, end);
+            vector<string> values = Util::splitString(line);
 
             return stoi(values[3]);
         }
@@ -238,13 +224,7 @@ vector<string> ProcessParser::getSysCpuPercent(string coreNumber = "")
     while (getline(stream, line))
     {
         if (line.compare(0, name.size(), name) == 0)
-        {
-            istringstream buf(line);
-            istream_iterator<string> beg(buf), end;
-            vector<string> values(beg, end);
-
-            return values;
-        }
+            return Util::splitString(line);
     }
 
     return {};
@@ -305,9 +285,7 @@ float ProcessParser::getSysRamPercent()
 
         if (line.compare(0, memAvailable.size(), memAvailable) == 0)
         {
-            istringstream buf(line);
-            istream_iterator<string> beg(buf), end;
-            vector<string> values(beg, end);
+            vector<string> values = Util::splitString(line);
 
             memAvailableF = stof(values[1]);
             memAvailableB = true;
@@ -315,9 +293,7 @@ float ProcessParser::getSysRamPercent()
 
         if (line.compare(0, memFree.size(), memFree) == 0)
         {
-            istringstream buf(line);
-            istream_iterator<string> beg(buf), end;
-            vector<string> values(beg, end);
+            vector<string> values = Util::splitString(line);
 
             memFreeF = stof(values[1]);
             memFreeB = true;
@@ -325,9 +301,7 @@ float ProcessParser::getSysRamPercent()
 
         if (line.compare(0, buffers.size(), buffers) == 0)
         {
-            istringstream buf(line);
-            istream_iterator<string> beg(buf), end;
-            vector<string> values(beg, end);
+            vector<string> values = Util::splitString(line);
 
             buffersF = stof(values[1]);
             buffersB = true;
@@ -345,9 +319,7 @@ string ProcessParser::getSysKernelVersion()
 
     getline(stream, line);
 
-    istringstream buf(line);
-    istream_iterator<string> beg(buf), end;
-    vector<string> values(beg, end);
+    vector<string> values = Util::splitString(line);
 
     return values[2];
 }
@@ -388,9 +360,7 @@ int ProcessParser::getTotalThreads()
         {
             if (line.compare(0, name.size(), name) == 0)
             {
-                istringstream buf(line);
-                istream_iterator<string> beg(buf), end;
-                vector<string> values(beg, end);
+                vector<string> values = Util::splitString(line);
 
                 threads += stoi(values[1]);
                 break;
@@ -413,9 +383,7 @@ int ProcessParser::getTotalNumberOfProcesses()
     {
         if (line.compare(0, name.size(), name) == 0)
         {
-            istringstream buf(line);
-            istream_iterator<string> beg(buf), end;
-            vector<string> values(beg, end);
+            vector<string> values = Util::splitString(line);
 
             return stoi(values[1]);
         }
@@ -436,10 +404,8 @@ int ProcessParser::getNumberOfRunningProcesses()
     {
         if (line.compare(0, name.size(), name) == 0)
         {
-            istringstream buf(line);
-            istream_iterator<string> beg(buf), end;
-            vector<string> values(beg, end);
-
+            vector<string> values = Util::splitString(line);
+            
             return stoi(values[1]);
         }
     }
